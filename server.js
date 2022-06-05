@@ -1,25 +1,11 @@
-require("dotenv").config();
 const express = require("express");
-const cors = require("cors");
-
-// Sử dụng để phát nhạc
 const ZingMp3 = require("zingmp3-api-full");
-
-// Sử dụng để upload ảnh
-const {
-    cloudinaryUpload,
-    getImages,
-} = require("./services/cloudinaryServices");
-
-const { formatBuffer } = require("./services/datauriServices");
-const { singleUploadCtrl } = require("./services/mutlerServices");
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-//#region Music
+//#region Viết code vào đây
 
 /**
  * Thực hiện lấy bài hát
@@ -140,69 +126,13 @@ app.get("/getVideo", async (req, res) => {
 
 //#endregion
 
-//#region Image
+// //here we are configuring dist to serve app files
+// app.use("/", serveStatic(path.join(__dirname, "/dist")));
 
-/**
- * Get Images API
- */
-app.get("/api/photos", async (req, res) => {
-    const response = await getImages(req.query.next_cursor || "");
-    const results = {
-        images: [],
-        next_cursor: null,
-    };
-
-    response.resources.forEach((item) => {
-        results.images.push({
-            public_id: item.public_id,
-            created_at: item.created_at,
-            secure_url: item.secure_url,
-            width: process.env.HEIGHT_IMAGE * item.aspect_ratio + "px",
-            height: process.env.HEIGHT_IMAGE + "px",
-        });
-    });
-    if (response.next_cursor) {
-        results.next_cursor = response.next_cursor;
-    }
-
-    return res.json({
-        results,
-    });
-});
-
-/**
- * Upload API
- */
-app.post("/api/upload", singleUploadCtrl, async (req, res) => {
-    const uploadFile = req.body.file || req.file;
-    try {
-        if (!uploadFile) {
-            return res.status(422).send({
-                message: "There is error when uploading",
-            });
-        }
-        let uploadResult;
-        if (!uploadFile.buffer) {
-            uploadResult = await cloudinaryUpload(uploadFile);
-        } else {
-            const file64 = formatBuffer(req.file);
-            uploadResult = await cloudinaryUpload(file64.content);
-        }
-
-        // Convert stream to base64 format
-        return res.json({
-            cloudinaryId: uploadResult.public_id,
-            url: uploadResult.secure_url,
-            message: "Upload OK!",
-        });
-    } catch (error) {
-        return res.status(422).send({
-            message: error.message,
-        });
-    }
-});
-
-//#endregion
+// // this * route is to serve project on different page routes except root `/`
+// app.get(/.*/, function (req, res) {
+//     res.sendFile(path.join(__dirname, "/dist/index.html"));
+// });
 
 const port = process.env.PORT || 3002;
 app.listen(port);
