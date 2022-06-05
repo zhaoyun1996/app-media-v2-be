@@ -93,6 +93,7 @@ app.get("/getLyric", async (req, res) => {
  * Search Song
  */
 app.get("/search", async (req, res) => {
+    console.log(ZingMp3);
     var data = await ZingMp3.search(req.query.searchValue);
     res.send(data);
 });
