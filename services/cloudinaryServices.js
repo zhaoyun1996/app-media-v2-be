@@ -10,17 +10,19 @@ cloudinary.config({
     api_secret: process.env.API_SECRET,
 });
 
-cloudinaryUpload = (file) =>
+cloudinaryUpload = (file, folderName, fileName) =>
     cloudinary.uploader.upload(file, {
         upload_preset: process.env.UPLOAD_PRESET,
+        public_id: fileName,
+        folder: folderName
     });
 
 /**
  * Get images from folder using cloudinary Search API
  */
-getImages = async (next_cursor) => {
+getImages = async (next_cursor, folderName) => {
     const resources = await cloudinary.search
-        .expression(`folder:${process.env.UPLOAD_FOLDER}`)
+        .expression(`folder:${folderName}`)
         .max_results(20)
         .sort_by("uploaded_at", "desc")
         .next_cursor(next_cursor)
@@ -28,7 +30,15 @@ getImages = async (next_cursor) => {
     return resources;
 };
 
+/**
+ * Delete images from folder using cloudinary Search API
+ */
+deleteImagesById = async (public_ids) => {
+    return await cloudinary.api.delete_resources(public_ids);
+};
+
 module.exports = {
     cloudinaryUpload,
     getImages,
+    deleteImagesById
 };

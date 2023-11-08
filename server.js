@@ -9,6 +9,7 @@ const { ZingMp3 } = require("zingmp3-api-full");
 const {
     cloudinaryUpload,
     getImages,
+    deleteImagesById
 } = require("./services/cloudinaryServices");
 
 const { formatBuffer } = require("./services/datauriServices");
@@ -146,7 +147,7 @@ app.get("/getVideo", async (req, res) => {
  * Get Images API
  */
 app.get("/api/photos", async (req, res) => {
-    const response = await getImages(req.query.next_cursor || "");
+    const response = await getImages(req.query.next_cursor || "", req.query.folder_name);
     const results = {
         images: [],
         next_cursor: null,
@@ -175,6 +176,8 @@ app.get("/api/photos", async (req, res) => {
  */
 app.post("/api/upload", singleUploadCtrl, async (req, res) => {
     const uploadFile = req.body.file || req.file;
+    const folderName = req.query.folder_name;
+    const fileName = req.query.file_name;
     try {
         if (!uploadFile) {
             return res.status(422).send({
@@ -183,10 +186,10 @@ app.post("/api/upload", singleUploadCtrl, async (req, res) => {
         }
         let uploadResult;
         if (!uploadFile.buffer) {
-            uploadResult = await cloudinaryUpload(uploadFile);
+            uploadResult = await cloudinaryUpload(uploadFile, folderName, fileName);
         } else {
             const file64 = formatBuffer(req.file);
-            uploadResult = await cloudinaryUpload(file64.content);
+            uploadResult = await cloudinaryUpload(file64.content, folderName, fileName);
         }
 
         // Convert stream to base64 format
@@ -200,6 +203,17 @@ app.post("/api/upload", singleUploadCtrl, async (req, res) => {
             message: error.message,
         });
     }
+});
+
+/**
+ * Delete Image API
+ */
+app.delete("/api/delete_photos_by_id", async (req, res) => {
+    const response = await deleteImagesById(req.body.public_ids);
+
+    return res.json({
+        response
+    });
 });
 
 //#endregion
