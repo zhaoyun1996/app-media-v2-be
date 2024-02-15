@@ -219,5 +219,26 @@ app.delete("/api/delete_photos_by_id", async (req, res) => {
 //#endregion
 
 const port = process.env.PORT || 3002;
-app.listen(port);
+const server = app.listen(port);
 console.log(`app is listening on port: ${port}`);
+
+//#region Socket
+
+const socket = require("socket.io");
+const io = socket(server, {
+    cors: {credentials: true},
+});
+
+let messages = [];
+var users = [];
+
+io.on("connection", function (socket) {
+    socket.on("send-msg", function (data) {
+        console.log(data);
+        var newMessage = { text : data.message, user : data.user, date : new Date() };
+        messages.push(newMessage);
+        io.emit('read-msg', newMessage);
+    });
+});
+
+//#endregion
