@@ -233,11 +233,26 @@ let messages = [];
 var users = [];
 
 io.on("connection", function (socket) {
+    socket.emit('init-chat', messages);
+    socket.emit('update-users', users);
+
     socket.on("send-msg", function (data) {
-        console.log(data);
         var newMessage = { text : data.message, user : data.user, date : new Date() };
         messages.push(newMessage);
         io.emit('read-msg', newMessage);
+    });
+
+    socket.on('add-user', function(user){
+        users.push({ id: socket.id, name: user });
+        io.emit('update-users', users);
+        console.log(users);
+    });
+
+    socket.on('disconnect', function() {
+        users = users.filter(function(user){
+            return user.id != socket.id;
+        });
+        io.emit('update-users', users);
     });
 });
 
