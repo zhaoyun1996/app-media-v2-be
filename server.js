@@ -230,29 +230,26 @@ const io = socket(server, {
 });
 
 let messages = [];
-var users = [];
+let users = [];
 
 io.on("connection", function (socket) {
     socket.emit('init-chat', messages);
-    socket.emit('update-users', users);
+    socket.emit('update-users', [...users]);
 
     socket.on("send-msg", function (data) {
-        var newMessage = { text : data.message, user : data.user, date : new Date() };
+        var newMessage = { text: data.message, user: data.user, date: new Date() };
         messages.push(newMessage);
         io.emit('read-msg', newMessage);
     });
 
-    socket.on('add-user', function(user){
+    socket.on('add-user', (user) => {
         users.push({ id: socket.id, name: user });
-        io.emit('update-users', users);
-        console.log(users);
+        io.emit('update-users', [...users]);
     });
 
-    socket.on('disconnect', function() {
-        users = users.filter(function(user){
-            return user.id != socket.id;
-        });
-        io.emit('update-users', users);
+    socket.on('disconnect', () => {
+        users =  users.filter(user => user.id != socket.id);
+        io.emit('update-users', [...users]);
     });
 });
 
